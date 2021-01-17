@@ -28,9 +28,9 @@ class NDCubePlotMixin:
             The axes to plot onto. If None the current axes will be used.
 
         plot_axes: `list`, optional
-            A list of length equal to the number of pixel dimensions. This list
-            selects which cube axes are displayed on which plot axes. For a
-            image plot this list should contain ``'x'`` and ``'y'`` for the
+            A list of length equal to the number of pixel dimensions in array axis order.
+            This list selects which cube axes are displayed on which plot axes.
+            For an image plot this list should contain ``'x'`` and ``'y'`` for the
             plot axes and `None` for all the other elements. For a line plot it
             should only contain ``'x'`` and `None` for all the other elements.
 
@@ -79,7 +79,7 @@ class NDCubePlotMixin:
                 ax = self._plot_1D_cube(plot_wcs, axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
 
-            elif naxis == 2:
+            elif naxis == 2 and 'y' in plot_axes:
                 ax = self._plot_2D_cube(plot_wcs, axes, plot_axes, axes_coordinates,
                                         axes_units, data_unit, **kwargs)
             else:
