@@ -137,6 +137,28 @@ def test_slicing_preserves_global_coords(ndcube_3d_ln_lt_l):
     assert sndc._global_coords._internal_coords == ndc._global_coords._internal_coords
 
 
+def test_slicing_removed_world_coords(ndcube_3d_ln_lt_l):
+    ndc = ndcube_3d_ln_lt_l
+    lat_key = "custom:pos.helioprojective.lat"
+    lon_key = "custom:pos.helioprojective.lon"
+    wl_key = "em.wl"
+
+    sndc = ndc[:, 0, :]
+    assert sndc.global_coords._all_coords == {}
+
+    sndc = ndc[0, 0, :]
+    all_coords = sndc.global_coords._all_coords
+    assert u.allclose(all_coords[lat_key][1], -0.00555556 * u.deg)
+    assert u.allclose(all_coords[lon_key][1], 0.00277778 * u.deg)
+    assert all_coords[lat_key][0] == lat_key
+    assert all_coords[lon_key][0] == lon_key
+
+    sndc = ndc[:, :, 0]
+    all_coords = sndc.global_coords._all_coords
+    assert u.allclose(all_coords[wl_key][1], 1.02e-9 * u.m)
+    assert all_coords[wl_key][0] == wl_key
+
+
 def test_axis_world_coords_wave_ec(ndcube_3d_l_ln_lt_ectime):
     cube = ndcube_3d_l_ln_lt_ectime
 
@@ -167,7 +189,7 @@ def test_axis_world_coords_complex_ec(ndcube_4d_ln_lt_l_t):
     data = np.arange(np.product(ec_shape)).reshape(ec_shape) * u.m / u.s
 
     # The lookup table has to be in world order so transpose it.
-    cube.extra_coords.add_coordinate('velocity', (1, 2), data.T)
+    cube.extra_coords.add('velocity', (1, 2), data.T)
 
     coords = cube.axis_world_coords(wcs=cube.extra_coords)
     assert len(coords) == 1
@@ -291,6 +313,17 @@ def test_axis_world_coords_sky(ndcube_3d_ln_lt_l, wapt):
                                      [19.99999994, 19.99999994, 19.99999994]] * u.arcsec)
     assert u.allclose(coords[0].Ty, [[-19.99999991, -14.99999996, -9.99999998],
                                      [-19.99999984, -14.9999999, -9.99999995]] * u.arcsec)
+
+
+def test_axes_world_coords_sky_only(ndcube_2d_ln_lt):
+    coords = ndcube_2d_ln_lt.axis_world_coords()
+
+    assert len(coords) == 1
+    assert isinstance(coords[0], SkyCoord)
+    assert u.allclose(coords[0].Tx[:, 0], [-16, -12, -8, -4, 0, 4, 8,
+                                           12, 16, 20] * u.arcsec, atol=1e-5 * u.arcsec)
+    assert u.allclose(coords[0].Ty[0, :], [-8, -6, -4, -2, 0, 2, 4, 6, 8, 10,
+                                           12, 14] * u.arcsec, atol=1e-5 * u.arcsec)
 
 
 def test_axis_world_coords_values_all(ndcube_3d_ln_lt_l):
